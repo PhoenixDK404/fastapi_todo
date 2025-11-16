@@ -1,4 +1,3 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
@@ -8,21 +7,16 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # ❗ 1. Задаем путь к БД внутри контейнера.
-      # Важно: Здесь мы говорим приложению, что БД находится по пути /app/data/sql_app.db
+
       DATABASE_URL: sqlite:///./data/sql_app.db
 
     volumes:
-      # Монтируем ваш код
       - .:/app
-      # ❗ 2. Монтируем том, чтобы сохранить данные.
-      # Том 'sqlite_data' будет соответствовать директории /app/data внутри контейнера.
       - sqlite_data:/app/data
 
   test:
     build: .
     environment:
-      # ❗ Задаем путь к тестовой БД
       DATABASE_URL: sqlite:///./data/test_db.sqlite
     depends_on:
       - app
