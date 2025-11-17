@@ -45,7 +45,7 @@ def read_all_task(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     return tasks
 
 @router.get("/{task_id}", response_model=schemas.Task)
-def read_tasK(task_id: int, db: Session = Depends(get_db)):
+def read_task(task_id: int, db: Session = Depends(get_db)):
     """
         Получает задачу по ее ID.
 
@@ -63,7 +63,7 @@ def read_tasK(task_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{task_id}", response_model=schemas.Task)
-def update_tasK(task_id: int, task_data: schemas.TaskUpdate, db: Session = Depends(get_db),
+def update_task(task_id: int, task_data: schemas.TaskUpdate, db: Session = Depends(get_db),
                 current_user: models.User = Depends(get_current_user)):
     """
         Обновляет существующую задачу по ID.
