@@ -7,7 +7,9 @@ SQLAlchemy Модели для базы данных.
 
 from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import Enum as SqlEnum
 from .database import Base
+from .schemas import TaskStatus
 
 class User(Base):
     """
@@ -45,6 +47,6 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     description = Column(String, nullable=True)
-    status = Column(String, default="new")
+    status = Column(SqlEnum(TaskStatus), default=TaskStatus.new)
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="tasks")

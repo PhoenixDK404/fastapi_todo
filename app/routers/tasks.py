@@ -82,7 +82,7 @@ def update_task(task_id: int, task_data: schemas.TaskUpdate, db: Session = Depen
         raise HTTPException(status_code=404, detail="Task not found")
     if db_task.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this task")
-    updated_task = crud.update_task(db, task_id, task_data, owner_id=current_user.id)  # <-- Добавлено
+    updated_task = crud.update_task(db, task_id, task_data)
 
     if updated_task is None:
         raise HTTPException(status_code=400, detail="Invalid status value")

@@ -112,8 +112,9 @@ def test_update_task_forbidden(client: TestClient, db_session: Session, task_dat
     user2, _, _ = another_user_and_token
 
     task_of_user2 = create_task_fixture(db_session, user2.id, task_data_generator)
+    initial_description = task_of_user2.description
 
-    update_data = {"description": "Hacked!", "status": "in_progress"}
+    update_data = {"description": "Attempted forbidden update"}
 
     response = client.put(f"/tasks/{task_of_user2.id}", json=update_data, headers=headers1)
 
@@ -133,10 +134,9 @@ def test_update_task_invalid_status(client: TestClient, db_session: Session, tas
 
     response = client.put(f"/tasks/{task.id}", json=update_data, headers=headers)
 
-    assert response.status_code == 400
-    assert "Invalid status value" in response.json()["detail"]
-
-
+    assert response.status_code == 422
+    response_json = response.json()
+    assert "Input should be 'new', 'in processing' or 'finished'" in response_json["detail"][0]["msg"]
 
 
 def test_delete_task_success(client: TestClient, db_session: Session, task_data_generator,

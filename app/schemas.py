@@ -8,12 +8,18 @@ Pydantic Схемы данных
 
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
+from enum import Enum
+
+class TaskStatus(str, Enum):
+    new = "new"
+    in_processing = "in processing"
+    finished = "finished"
 
 class TaskBase(BaseModel):
     """Базовая схема для задачи, содержащая поля для создания и обновления."""
     title: str
     description: Optional[str] = None
-    status: str = "new"
+    status: TaskStatus = TaskStatus.new
 
 class TaskCreate(TaskBase):
     """Схема для создания новой задачи (наследует TaskBase)."""
@@ -23,7 +29,7 @@ class TaskUpdate(TaskBase):
     """Схема для частичного обновления существующей задачи"""
     title: Optional[str] = None
     description: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[TaskStatus] = None
 
 class Task(TaskBase):
     """Схема для чтения задачи"""

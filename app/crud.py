@@ -4,6 +4,7 @@ CRUD операции для взаимодействия с базой данн
 Содержит функции, которые работают с объектами SQLAlchemy Session,
 User, и Task, обеспечивая логику доступа и модификации данных.
 """
+from typing import List, Optional, Dict, Any
 
 from sqlalchemy.orm import Session
 from . import models, schemas
@@ -171,7 +172,7 @@ def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
     return db_task
 
 
-def update_task(db: Session, task_id: int, task_data: schemas.TaskUpdate, owner_id: int):
+def update_task(db: Session, task_id: int, task_data: schemas.TaskUpdate) -> Optional[models.Task]:
     """
         Обновляет данные существующей задачи, проверяя принадлежность владельцу.
 
@@ -186,20 +187,17 @@ def update_task(db: Session, task_id: int, task_data: schemas.TaskUpdate, owner_
                                    владелец не совпадает, или статус невалиден.
         """
     db_task = get_task(db, task_id)
-    if db_task and db_task.owner_id == owner_id:
-        update_data = task_data.model_dump(exclude_unset=True)
-        if 'status' in update_data and update_data['status'] not in ["new", "in processing", "finished"]:
-            return None
-        if 'title' in update_data:
-            db_task.title = update_data['title']
-        if 'description' in update_data:
-            db_task.description = update_data['description']
-        if 'status' in update_data:
-            db_task.status = update_data['status']
-        db.commit()
-        db.refresh(db_task)
-        return db_task
-    return None
+    if not db_task:
+        return None
+
+    task_data_dict = task_data.dict(exclude_unset=True)
+
+    for key, value in task_data_dict.items():
+        setattr(db_task, key, value)
+
+    db.commit()
+    db.refresh(db_task)
+    return db_task
 
 def delete_task(db: Session, task_id: int):
     """
