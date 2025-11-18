@@ -25,9 +25,9 @@ class User(Base):
         """
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, index=True, unique=True)
-    email = Column(String, index=True, unique=True)
-    hashed_password = Column(String)
+    username = Column(String(50), index=True, unique=True)
+    email = Column(String(100), index=True, unique=True)
+    hashed_password = Column(String(128))
     tasks = relationship("Task", back_populates="owner")
 
 class Task(Base):
@@ -45,8 +45,8 @@ class Task(Base):
         """
     __tablename__ = "tasks"
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    description = Column(String, nullable=True)
+    title = Column(String(100), index=True)
+    description = Column(String(500), nullable=True)
     status = Column(SqlEnum(TaskStatus), default=TaskStatus.new)
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="tasks")
