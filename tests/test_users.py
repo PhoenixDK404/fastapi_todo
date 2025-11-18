@@ -97,7 +97,7 @@ def test_update_user_info_success(client: TestClient, db_session: Session, authe
         "password": "new_password123"
     }
 
-    response = client.post(f"/users/{created_user.id}", json=update_data, headers=headers)
+    response = client.put(f"/users/{created_user.id}", json=update_data, headers=headers)
 
     assert response.status_code == 200
     updated_user_data = response.json()
@@ -117,7 +117,7 @@ def test_update_user_info_forbidden(client: TestClient, db_session: Session, use
 
     update_data = {"username": "hacker_name", "email": "hacker@test.com", "password": "pass"}
 
-    response = client.post(f"/users/{user_2.id}", json=update_data, headers=headers)
+    response = client.put(f"/users/{user_2.id}", json=update_data, headers=headers)
 
     assert response.status_code == 403
     assert "Not authorized to update this users information" in response.json()["detail"]
@@ -131,7 +131,7 @@ def test_update_user_info_unauthorized(client: TestClient, db_session: Session, 
 
     update_data = {"username": "anon_name", "email": "anon@test.com", "password": "pass"}
 
-    response = client.post(f"/users/{user.id}", json=update_data)
+    response = client.put(f"/users/{user.id}", json=update_data)
 
     assert response.status_code == 401
 

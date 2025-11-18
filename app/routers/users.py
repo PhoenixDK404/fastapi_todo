@@ -64,7 +64,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
-@router.post("/{user_id}", response_model=schemas.User)
+@router.put("/{user_id}", response_model=schemas.User)
 def update_user_info(user_id: int, user_data: schemas.UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     """
         Обновляет информацию об учетной записи пользователя.
