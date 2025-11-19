@@ -34,6 +34,19 @@ def test_create_task_unauthorized(client: TestClient, task_data_generator):
     assert response.status_code == 401
     assert "Not authenticated" in response.json()["detail"]
 
+def test_read_task_forbidden(client: TestClient, task_factory: Callable,
+                             authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]],
+                             another_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
+    """Тестирует попытку чтения чужой задачи (403 Forbidden)."""
+    user1, headers1, _ = authenticated_user_and_token
+    user2, _, _ = another_user_and_token
+
+    task_of_user2 = task_factory(user2.id)
+
+    response = client.get(f"/tasks/{task_of_user2.id}", headers=headers1)
+
+    assert response.status_code == 403
+    assert "Not authorized to access this task" in response.json()["detail"]
 
 def test_read_all_tasks_success(client: TestClient, task_factory: Callable,
                                 authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
@@ -67,10 +80,10 @@ def test_read_task_by_id_success(client: TestClient, task_factory: Callable, aut
     assert response.json()["id"] == task.id
     assert response.json()["title"] == task.title
 
-def test_read_task_not_found(client: TestClient):
-    """Тестирует запрос задачи с несуществующим ID."""
-    response = client.get("/tasks/99999")
-
+def test_read_task_not_found(client: TestClient, authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
+    """Тестирует получение несуществующей задачи. Добавлены заголовки."""
+    _, headers, _ = authenticated_user_and_token
+    response = client.get("/tasks/9999", headers=headers)
     assert response.status_code == 404
     assert "Task not found" in response.json()["detail"]
 
@@ -110,7 +123,7 @@ def test_update_task_forbidden(client: TestClient, db_session: Session, task_fac
     response = client.put(f"/tasks/{task_of_user2.id}", json=update_data, headers=headers1)
 
     assert response.status_code == 403
-    assert "Not authorized to update this task" in response.json()["detail"]
+    assert "Not authorized to access this task" in response.json()["detail"]
 
     db_task_after = crud.get_task(db_session, task_id=task_of_user2.id)
     assert db_task_after.description == initial_description
@@ -153,7 +166,7 @@ def test_delete_task_forbidden(client: TestClient, db_session: Session, task_fac
 
     response = client.delete(f"/tasks/{task_of_user2.id}", headers=headers1)
     assert response.status_code == 403
-    assert "Not authorized to delete this task" in response.json()["detail"]
+    assert "Not authorized to access this task" in response.json()["detail"]
 
     db_task = crud.get_task(db_session, task_id=task_of_user2.id)
     assert db_task is not None

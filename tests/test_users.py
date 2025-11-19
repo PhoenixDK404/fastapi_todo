@@ -120,7 +120,7 @@ def test_update_user_info_forbidden(client: TestClient, db_session: Session, use
     response = client.put(f"/users/{user_2.id}", json=update_data, headers=headers)
 
     assert response.status_code == 403
-    assert "Not authorized to update this users information" in response.json()["detail"]
+    assert "Not authorized to perform this action on this user" in response.json()["detail"]
 
 
 def test_update_user_info_unauthorized(client: TestClient, db_session: Session, user_data_generator):
@@ -159,6 +159,6 @@ def test_delete_user_other_fail(client: TestClient, db_session: Session, user_da
     response = client.delete(f"/users/{user_2.id}", headers=headers)
 
     assert response.status_code == 403
-    assert "Not authorized to delete this account" in response.json()["detail"]
+    assert "Not authorized to perform this action on this user" in response.json()["detail"]
 
     assert crud.get_user(db_session, user_id=user_2.id) is not None

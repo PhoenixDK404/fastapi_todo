@@ -11,6 +11,27 @@ from ..auth import get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
+def get_user_or_404(user_id: int, db: Session = Depends(get_db)) -> models.User:
+    db_user = crud.get_user(db, user_id = user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+def get_authorized_user_for_action(
+    target_user: models.User = Depends(get_user_or_404),
+    current_user: models.User = Depends(get_current_user)
+) -> models.User:
+    """
+    Проверяет, что текущий пользователь является владельцем профиля target_user.
+    Если нет, вызывает 403.
+    """
+    if current_user.id != target_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform this action on this user"
+        )
+    return target_user
+
 @router.post("/", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """
@@ -48,58 +69,18 @@ def read_all_users(skip: int = 0, limit: int = 100, db: Session =Depends(get_db)
     return users
 
 @router.get("/{user_id}", response_model=schemas.User)
-def read_user(user_id: int, db: Session = Depends(get_db)):
-    """
-        Получает пользователя по его ID.
-
-        Args:
-            user_id (int): ID пользователя.
-            db (Session): Сессия базы данных.
-
-        Returns:
-            schemas.User: Запрошенный объект пользователя.
-        """
-    db_user = crud.get_user(db, user_id=user_id)
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+def read_user(user: models.User = Depends(get_user_or_404)):
+    """Получает пользователя по его ID. """
+    return user
 
 @router.put("/{user_id}", response_model=schemas.User)
-def update_user_info(user_id: int, user_data: schemas.UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    """
-        Обновляет информацию об учетной записи пользователя.
-
-        Args:
-            user_id (int): ID пользователя, которого нужно обновить.
-            user_data (schemas.UserCreate): Новые данные пользователя (включая пароль).
-            db (Session): Сессия базы данных.
-            current_user (models.User): Текущий аутентифицированный пользователь.
-
-        Returns:
-            schemas.User: Обновленный объект пользователя.
-        """
-    if current_user.id != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this users information")
-
-    updated_user = crud.update_user(db, user_id, user_data)
-    if updated_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-
+def update_user_info(user_data: schemas.UserCreate, user_id: int, target_user: models.User = Depends(get_authorized_user_for_action), db: Session = Depends(get_db)):
+    """Обновляет информацию об учетной записи пользователя."""
+    updated_user = crud.update_user(db, target_user.id, user_data)
     return updated_user
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user_account(user_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    """
-        Удаляет учетную запись пользователя.
-
-        Args:
-            user_id (int): ID пользователя для удаления.
-            db (Session, optional): Сессия базы данных.
-            current_user (models.User): Текущий аутентифицированный пользователь.
-
-        """
-    if current_user.id != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail = "Not authorized to delete this account")
-    if not crud.delete_user(db, user_id):
-        raise HTTPException(status_code=404, detail="User not found")
+def delete_user_account(user_id: int,target_user: models.User = Depends(get_authorized_user_for_action),db: Session = Depends(get_db)):
+    """Удаляет учетную запись пользователя."""
+    crud.delete_user(db, target_user.id)
     return
