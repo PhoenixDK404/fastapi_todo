@@ -3,7 +3,8 @@
 import pytest
 from starlette.testclient import TestClient
 from sqlalchemy.orm import Session
-from app import crud, schemas
+from typing import Callable, Dict, Tuple
+from app import crud, models
 
 
 def test_create_task_success(client: TestClient, db_session: Session, task_data_generator,
@@ -18,6 +19,7 @@ def test_create_task_success(client: TestClient, db_session: Session, task_data_
 
     response_json = response.json()
     assert response_json["title"] == task_data["title"]
+    assert response_json["description"] == task_data["description"]
     assert response_json["owner_id"] == user.id
 
     db_task = crud.get_task(db_session, task_id=response_json["id"])
@@ -33,43 +35,37 @@ def test_create_task_unauthorized(client: TestClient, task_data_generator):
     assert "Not authenticated" in response.json()["detail"]
 
 
+def test_read_all_tasks_success(client: TestClient, task_factory: Callable,
+                                authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
+    """Тестирует успешное получение списка задач и проверяет их содержимое."""
+    user1, headers1, _ = authenticated_user_and_token
 
+    task1 = task_factory(user1.id, initial_data={"title": "User1 Task 1"})
+    task2 = task_factory(user1.id, initial_data={"title": "User1 Task 2"})
 
-def test_read_all_tasks_success(client: TestClient, db_session: Session, task_data_generator,
-                                authenticated_user_and_token):
-    """Тестирует успешное получение списка всех задач."""
-    user, _, _ = authenticated_user_and_token
-
-    task1 = crud.create_task(db_session, task=schemas.TaskCreate(**task_data_generator()), user_id=user.id)
-    task2 = crud.create_task(db_session, task=schemas.TaskCreate(**task_data_generator()), user_id=user.id)
-    db_session.commit()
-
-    response = client.get("/tasks/")
-
+    response = client.get("/tasks/", headers=headers1)
     assert response.status_code == 200
-    tasks_list = response.json()
-    assert isinstance(tasks_list, list)
-    assert len(tasks_list) >= 2
 
-    task_titles = {t['title'] for t in tasks_list}
+    tasks = response.json()
+    assert len(tasks) == 2
+
+    task_titles = {t['title'] for t in tasks}
     assert task1.title in task_titles
     assert task2.title in task_titles
 
+    for task in tasks:
+        assert task["owner_id"] == user1.id
 
-def test_read_task_by_id_success(client: TestClient, db_session: Session, task_data_generator,
-                                 authenticated_user_and_token):
-    """Тестирует успешное получение задачи по ее ID."""
-    user, _, _ = authenticated_user_and_token
 
-    task = crud.create_task(db_session, task=schemas.TaskCreate(**task_data_generator()), user_id=user.id)
-    db_session.commit()
+def test_read_task_by_id_success(client: TestClient, task_factory: Callable, authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
+    """Тестирует успешное получение задачи по ID."""
+    user, headers, _ = authenticated_user_and_token
+    task = task_factory(user.id)
 
-    response = client.get(f"/tasks/{task.id}")
-
+    response = client.get(f"/tasks/{task.id}", headers=headers)
     assert response.status_code == 200
     assert response.json()["id"] == task.id
-    assert response.json()["owner_id"] == user.id
-
+    assert response.json()["title"] == task.title
 
 def test_read_task_not_found(client: TestClient):
     """Тестирует запрос задачи с несуществующим ID."""
@@ -79,39 +75,34 @@ def test_read_task_not_found(client: TestClient):
     assert "Task not found" in response.json()["detail"]
 
 
-
-
-def create_task_fixture(db_session: Session, user_id: int, task_data_generator):
-    """Создает и сохраняет новую задачу в БД для указанного пользователя."""
-    task = crud.create_task(db_session, task=schemas.TaskCreate(**task_data_generator()), user_id=user_id)
-    db_session.commit()
-    db_session.refresh(task)
-    return task
-
-
-def test_update_task_success(client: TestClient, db_session: Session, task_data_generator,
-                             authenticated_user_and_token):
-    """Тестирует успешное обновление задачи ее владельцем."""
+def test_update_task_success(client: TestClient, db_session: Session, task_factory: Callable,
+                             authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
+    """Тестирует успешное обновление задачи."""
     user, headers, _ = authenticated_user_and_token
-    task = create_task_fixture(db_session, user.id, task_data_generator)
+    task = task_factory(user.id)
 
     update_data = {"description": "Updated description", "status": "finished"}
 
     response = client.put(f"/tasks/{task.id}", json=update_data, headers=headers)
-
     assert response.status_code == 200
-    updated_task = response.json()
-    assert updated_task["description"] == update_data["description"]
-    assert updated_task["status"] == update_data["status"]
+
+    response_json = response.json()
+    assert response_json["description"] == update_data["description"]
+    assert response_json["status"] == "finished"
+
+    db_task = crud.get_task(db_session, task_id=task.id)
+    assert db_task.description == update_data["description"]
+    assert db_task.status.value == "finished"
 
 
-def test_update_task_forbidden(client: TestClient, db_session: Session, task_data_generator,
-                               authenticated_user_and_token, another_user_and_token):
-    """Тестирует попытку обновления задачи не-владельцем."""
+def test_update_task_forbidden(client: TestClient, db_session: Session, task_factory: Callable,
+                               authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]],
+                               another_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
+    """Тестирует попытку обновления задачи не-владельцем. Ожидаем 403."""
     user1, headers1, _ = authenticated_user_and_token
     user2, _, _ = another_user_and_token
 
-    task_of_user2 = create_task_fixture(db_session, user2.id, task_data_generator)
+    task_of_user2 = task_factory(user2.id)
     initial_description = task_of_user2.description
 
     update_data = {"description": "Attempted forbidden update"}
@@ -121,14 +112,15 @@ def test_update_task_forbidden(client: TestClient, db_session: Session, task_dat
     assert response.status_code == 403
     assert "Not authorized to update this task" in response.json()["detail"]
 
-    assert crud.get_task(db_session, task_id=task_of_user2.id).description != update_data["description"]
+    db_task_after = crud.get_task(db_session, task_id=task_of_user2.id)
+    assert db_task_after.description == initial_description
 
 
-def test_update_task_invalid_status(client: TestClient, db_session: Session, task_data_generator,
-                                    authenticated_user_and_token):
-    """Тестирует попытку обновления задачи недопустимым значением 'status'."""
+def test_update_task_invalid_status(client: TestClient, db_session: Session, task_factory: Callable,
+                                    authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
+    """Тестирует попытку обновления задачи недопустимым значением 'status'. Ожидаем 422."""
     user, headers, _ = authenticated_user_and_token
-    task = create_task_fixture(db_session, user.id, task_data_generator)
+    task = task_factory(user.id)
 
     update_data = {"status": "invalid_status_value"}
 
@@ -139,35 +131,32 @@ def test_update_task_invalid_status(client: TestClient, db_session: Session, tas
     assert "Input should be 'new', 'in processing' or 'finished'" in response_json["detail"][0]["msg"]
 
 
-def test_delete_task_success(client: TestClient, db_session: Session, task_data_generator,
-                             authenticated_user_and_token):
-    """Тестирует успешное удаление задачи ее владельцем."""
+def test_delete_task_success(client: TestClient, db_session: Session, task_factory: Callable, authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
+    """Тестирует успешное удаление задачи."""
     user, headers, _ = authenticated_user_and_token
-    task = create_task_fixture(db_session, user.id, task_data_generator)
-    task_id = task.id
+    task = task_factory(user.id)
 
-    response = client.delete(f"/tasks/{task_id}", headers=headers)
-
+    response = client.delete(f"/tasks/{task.id}", headers=headers)
     assert response.status_code == 204
 
-    assert crud.get_task(db_session, task_id=task_id) is None
+    db_task = crud.get_task(db_session, task_id=task.id)
+    assert db_task is None
 
-
-def test_delete_task_forbidden(client: TestClient, db_session: Session, task_data_generator,
-                               authenticated_user_and_token, another_user_and_token):
+def test_delete_task_forbidden(client: TestClient, db_session: Session, task_factory: Callable,
+                               authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]],
+                               another_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
     """Тестирует попытку удаления задачи не-владельцем."""
     user1, headers1, _ = authenticated_user_and_token
     user2, _, _ = another_user_and_token
 
-    task_of_user2 = create_task_fixture(db_session, user2.id, task_data_generator)
+    task_of_user2 = task_factory(user2.id)
 
     response = client.delete(f"/tasks/{task_of_user2.id}", headers=headers1)
-
     assert response.status_code == 403
     assert "Not authorized to delete this task" in response.json()["detail"]
 
-    assert crud.get_task(db_session, task_id=task_of_user2.id) is not None
-
+    db_task = crud.get_task(db_session, task_id=task_of_user2.id)
+    assert db_task is not None
 
 def test_delete_task_not_found(client: TestClient, authenticated_user_and_token):
     """Тестирует попытку удаления несуществующей задачи."""

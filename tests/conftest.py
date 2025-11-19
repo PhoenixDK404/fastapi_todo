@@ -9,7 +9,8 @@ from starlette.testclient import TestClient
 from sqlalchemy.orm import Session
 from app.main import app
 from app.database import Base, engine, get_db, SessionLocal
-from app import crud, schemas, auth
+from app import crud, schemas, models
+from typing import Callable, Dict, Any
 
 
 @pytest.fixture(scope="session")
@@ -134,12 +135,24 @@ def task_data_generator():
         nonlocal counter
         counter += 1
         return {
-            "title": f"Test Task Title {counter}",
-            "description": f"Details for task {counter}",
+            "title" : f"Test Task Title {counter}",
+            "description" : f"Details for task {counter}",
+            "status" : schemas.TaskStatus.new.value
         }
 
     return _generator
 
+@pytest.fixture(scope="function")
+def task_factory(db_session: Session, task_data_generator: Callable[[], Dict[str, Any]]):
+    """Фикстура для создания и сохранения объекта Task в БД."""
+    def _create_task(owner_id: int, initial_data: Dict[str, Any] = None) -> models.Task:
+        data = task_data_generator()
+        if initial_data:
+            data.update(initial_data)
+        task_schema = schemas.TaskCreate(**data)
+        return crud.create_task(db=db_session, task=task_schema, user_id=owner_id) # type: ignore
+
+    return _create_task
 
 @pytest.fixture(scope="function")
 def another_user_and_token(db_session: Session, user_data_generator, get_auth_token_fixture):
