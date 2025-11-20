@@ -63,7 +63,7 @@ def get_all_users(db: Session, skip: int =0, limit: int = 100):
         """
     return db.query(models.User).offset(skip).limit(limit).all()
 
-def create_user(db: Session, user: schemas.UserCreate):
+def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     """
         Создает нового пользователя в базе данных.
 
@@ -84,8 +84,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.commit()
     db.refresh(db_user)
     return db_user
-
-def update_user(db: Session, user_id: int, user_data: schemas.UserCreate):
+def update_user(db: Session, db_user: models.User, user: schemas.UserCreate) -> models.User:
     """
         Обновляет данные существующего пользователя.
 
@@ -97,16 +96,19 @@ def update_user(db: Session, user_id: int, user_data: schemas.UserCreate):
         Returns:
             Optional[models.User]: Обновленный объект пользователя или None, если не найден.
         """
-    db_user = get_user(db,user_id)
-    if db_user:
-        db_user.username = user_data.username
-        db_user.email = user_data.email
-        if user_data.password:
-            db_user.hashed_password = get_password_hash(user_data.password)
-        db.commit()
-        db.refresh(db_user)
-        return db_user
-    return None
+    update_data = user.model_dump(exclude_unset=True)
+
+    if 'password' in update_data:
+        new_password = update_data.pop('password')
+        update_data['hashed_password'] = get_password_hash(new_password)
+
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
+
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
 
 def delete_user(db: Session, user_id: int):
     """
@@ -126,7 +128,7 @@ def delete_user(db: Session, user_id: int):
         return True
     return False
 
-def get_tasks(db: Session, skip: int = 0, limit: int = 100):
+def get_tasks(db: Session,owner_id: int, skip: int = 0, limit: int = 100) -> list[models.Task]:
     """
         Получает список всех задач с возможностью пагинации.
 
@@ -138,7 +140,7 @@ def get_tasks(db: Session, skip: int = 0, limit: int = 100):
         Returns:
             List[models.Task]: Список объектов задач.
         """
-    return db.query(models.Task).offset(skip).limit(limit).all()
+    return db.query(models.Task).filter(models.Task.owner_id == owner_id).offset(skip).limit(limit).all()
 
 def get_task(db: Session, task_id: int):
     """

@@ -5,13 +5,16 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app import crud, schemas, models
+from app import crud, schemas, models, services
 from app.database import get_db
 from app.auth import get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 def get_user_or_404(user_id: int, db: Session = Depends(get_db)) -> models.User:
+    """
+    Получает пользователя по ID или вызывает ошибку 404.
+    """
     db_user = crud.get_user(db, user_id = user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -23,7 +26,6 @@ def get_authorized_user_for_action(
 ) -> models.User:
     """
     Проверяет, что текущий пользователь является владельцем профиля target_user.
-    Если нет, вызывает 403.
     """
     if current_user.id != target_user.id:
         raise HTTPException(
@@ -44,13 +46,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         Returns:
             schemas.User: Созданный объект пользователя.
         """
-    db_user_email = crud.get_user_by_email(db, email=user.email)
-    if db_user_email:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    db_user_username = crud.get_user_by_username(db, username=user.username)
-    if db_user_username:
-        raise HTTPException(status_code=400, detail="Username already taken")
-    return crud.create_user(db=db, user=user)
+    return services.create_user(db=db, user=user)
 
 @router.get("/", response_model=list[schemas.User])
 def read_all_users(skip: int = 0, limit: int = 100, db: Session =Depends(get_db)):
@@ -76,7 +72,7 @@ def read_user(user: models.User = Depends(get_user_or_404)):
 @router.put("/{user_id}", response_model=schemas.User)
 def update_user_info(user_data: schemas.UserCreate, user_id: int, target_user: models.User = Depends(get_authorized_user_for_action), db: Session = Depends(get_db)):
     """Обновляет информацию об учетной записи пользователя."""
-    updated_user = crud.update_user(db, target_user.id, user_data)
+    updated_user = crud.update_user(db, target_user, user_data)
     return updated_user
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
