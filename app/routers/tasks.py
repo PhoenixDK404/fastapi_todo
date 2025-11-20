@@ -7,9 +7,9 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from .. import crud, schemas, models
-from ..database import get_db
-from ..auth import get_current_user
+from app import crud, schemas, models
+from app.database import get_db
+from app.auth import get_current_user
 from typing import Annotated
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
@@ -72,10 +72,8 @@ def update_task_info(
     task: Annotated[models.Task, Depends(get_owned_task_or_fail)],
     db: Session = Depends(get_db),
 ):
-    """
-    Обновляет существующую задачу по ID. Только владелец задачи может ее обновить.
-    """
-    updated_task = crud.update_task(db, task.id, task_data)
+    """Обновляет существующую задачу по ID"""
+    updated_task = crud.update_task(db, task, task_data)
     return updated_task
 
 

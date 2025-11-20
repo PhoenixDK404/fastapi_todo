@@ -5,9 +5,9 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from .. import crud, schemas, models
-from ..database import get_db
-from ..auth import get_current_user
+from app import crud, schemas, models
+from app.database import get_db
+from app.auth import get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

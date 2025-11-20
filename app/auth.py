@@ -20,10 +20,10 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from . import crud
-from .database import get_db
-from .schemas import TokenData
-from .models import User as DBUser
+from app import crud
+from app.database import get_db
+from app.schemas import TokenData
+from app.models import User as DBUser
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")

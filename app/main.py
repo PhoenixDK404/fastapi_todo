@@ -8,10 +8,10 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from . import models, crud, schemas, auth
-from .auth import ACCESS_TOKEN_EXPIRE_MINUTES
-from .database import engine, get_db
-from .routers import users, tasks
+from app import models, crud, schemas, auth
+from app.auth import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.database import engine, get_db
+from app.routers import users, tasks
 
 models.Base.metadata.create_all(bind=engine)
 

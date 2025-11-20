@@ -4,11 +4,11 @@ CRUD операции для взаимодействия с базой данн
 Содержит функции, которые работают с объектами SQLAlchemy Session,
 User, и Task, обеспечивая логику доступа и модификации данных.
 """
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
-from . import models, schemas
-from .auth import get_password_hash
+from app import models, schemas
+from app.auth import get_password_hash
 
 def get_user(db: Session, user_id: int):
     """
@@ -172,24 +172,18 @@ def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
     return db_task
 
 
-def update_task(db: Session, task_id: int, task_data: schemas.TaskUpdate) -> Optional[models.Task]:
+def update_task(db: Session, db_task: models.Task, task_data: schemas.TaskUpdate) -> models.Task:
     """
-        Обновляет данные существующей задачи, проверяя принадлежность владельцу.
+    Обновляет данные существующей задачи, проверяя принадлежность владельцу.
 
-        Args:
-            db (Session): Сессия базы данных SQLAlchemy.
-            task_id (int): ID задачи, которую нужно обновить.
-            task_data (schemas.TaskUpdate): Схема Pydantic с новыми данными.
-            owner_id (int): ID текущего аутентифицированного пользователя (владельца).
+    Args:
+        db (Session): Сессия базы данных SQLAlchemy.
+        db_task (models.Task): Объект модели задачи, который должен быть обновлен.
+        task_data (schemas.TaskUpdate): Pydantic-схема с данными для частичного обновления.
 
-        Returns:
-            Optional[models.Task]: Обновленный объект задачи или None, если не найдена,
-                                   владелец не совпадает, или статус невалиден.
+    Returns:
+        models.Task: Обновленный и перезагруженный объект задачи.
         """
-    db_task = get_task(db, task_id)
-    if not db_task:
-        return None
-
     task_data_dict = task_data.dict(exclude_unset=True)
 
     for key, value in task_data_dict.items():

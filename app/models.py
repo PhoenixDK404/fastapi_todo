@@ -8,8 +8,8 @@ SQLAlchemy Модели для базы данных.
 from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Enum as SqlEnum
-from .database import Base
-from .schemas import TaskStatus
+from app.database import Base
+from app.schemas import TaskStatus
 
 class User(Base):
     """
