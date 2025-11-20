@@ -5,16 +5,17 @@
 и управления аутентифицированными пользователями и токенами доступа.
 """
 import pytest
+from sqlalchemy import Engine
 from starlette.testclient import TestClient
 from sqlalchemy.orm import Session
 from app.main import app
 from app.database import Base, engine, get_db, SessionLocal
 from app import crud, schemas, models
-from typing import Callable, Dict, Any
+from typing import Callable, Dict, Any, Tuple, Generator, Optional
 
 
 @pytest.fixture(scope="session")
-def user_data_generator():
+def user_data_generator() -> Callable[[], Dict[str, str]]:
     """Функция для генерации уникальных тестовых данных пользователя."""
     counter = 0
 
@@ -31,7 +32,7 @@ def user_data_generator():
 
 
 @pytest.fixture(scope="session")
-def db_engine():
+def db_engine() -> Generator[Engine, None, None]:
     """Настраивает тестовый движок базы данных."""
     Base.metadata.create_all(bind=engine)
     yield engine
@@ -39,7 +40,7 @@ def db_engine():
 
 
 @pytest.fixture(scope="function")
-def db_session(db_engine):
+def db_session(db_engine) -> Generator[Engine, None, None]:
     """
     Создает изолированную сессию базы данных для каждого теста.
 
@@ -67,14 +68,14 @@ def db_session(db_engine):
 
 
 @pytest.fixture(scope="session")
-def client():
+def client() -> Generator[TestClient, None, None]:
     """Предоставляет тестовый клиент для взаимодействия с FastAPI приложением."""
     with TestClient(app, base_url="http://test") as c:
         yield c
 
 
 @pytest.fixture(scope="session")
-def get_auth_token_fixture(client: TestClient):
+def get_auth_token_fixture(client: TestClient) -> Callable[[str, str], str]:
     """
     Фабрика для получения JWT токена доступа.
 
@@ -99,7 +100,7 @@ def get_auth_token_fixture(client: TestClient):
 
 
 @pytest.fixture(scope="function")
-def authenticated_user_and_token(db_session: Session, user_data_generator, get_auth_token_fixture):
+def authenticated_user_and_token(db_session: Session, user_data_generator: Callable[[], Dict[str, str]], get_auth_token_fixture: Callable[[str, str], str]) -> Tuple[models.User, Dict[str, str], Dict[str, str]]:
     """
     Создает нового пользователя в БД и немедленно аутентифицирует его.
 
@@ -127,7 +128,7 @@ def authenticated_user_and_token(db_session: Session, user_data_generator, get_a
     return user, {"Authorization": f"Bearer {token}"}, user_data
 
 @pytest.fixture(scope="session")
-def task_data_generator():
+def task_data_generator() -> Callable[[], Dict[str, str]]:
     """Фабрика для генерации уникальных тестовых данных задачи."""
     counter = 0
 
@@ -143,7 +144,7 @@ def task_data_generator():
     return _generator
 
 @pytest.fixture(scope="function")
-def task_factory(db_session: Session, task_data_generator: Callable[[], Dict[str, Any]]):
+def task_factory(db_session: Session, task_data_generator: Callable[[], Dict[str, Any]]) -> Callable[[int, Optional[Dict[str, Any]]], models.Task]:
     """Фикстура для создания и сохранения объекта Task в БД."""
     def _create_task(owner_id: int, initial_data: Dict[str, Any] = None) -> models.Task:
         data = task_data_generator()
@@ -155,7 +156,7 @@ def task_factory(db_session: Session, task_data_generator: Callable[[], Dict[str
     return _create_task
 
 @pytest.fixture(scope="function")
-def another_user_and_token(db_session: Session, user_data_generator, get_auth_token_fixture):
+def another_user_and_token(db_session: Session, user_data_generator: Callable[[], Dict[str, str]], get_auth_token_fixture: Callable[[str, str], str]) -> Tuple[models.User, Dict[str, str], Dict[str, str]]:
     """
     Создает второго, независимого пользователя.
 

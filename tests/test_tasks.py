@@ -7,8 +7,8 @@ from typing import Callable, Dict, Tuple
 from app import crud, models
 
 
-def test_create_task_success(client: TestClient, db_session: Session, task_data_generator,
-                             authenticated_user_and_token):
+def test_create_task_success(client: TestClient, db_session: Session, task_data_generator: Callable[[], Dict[str, str]],
+                             authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
     """Тестирует успешное создание задачи аутентифицированным пользователем."""
     user, headers, _ = authenticated_user_and_token
     task_data = task_data_generator()
@@ -27,7 +27,7 @@ def test_create_task_success(client: TestClient, db_session: Session, task_data_
     assert db_task.owner_id == user.id
 
 
-def test_create_task_unauthorized(client: TestClient, task_data_generator):
+def test_create_task_unauthorized(client: TestClient, task_data_generator: Callable[[], Dict[str, str]]):
     """Тестирует попытку создания задачи без токена аутентификации."""
     task_data = task_data_generator()
     response = client.post("/tasks/", json=task_data)
@@ -171,7 +171,7 @@ def test_delete_task_forbidden(client: TestClient, db_session: Session, task_fac
     db_task = crud.get_task(db_session, task_id=task_of_user2.id)
     assert db_task is not None
 
-def test_delete_task_not_found(client: TestClient, authenticated_user_and_token):
+def test_delete_task_not_found(client: TestClient, authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
     """Тестирует попытку удаления несуществующей задачи."""
     _, headers, _ = authenticated_user_and_token
 

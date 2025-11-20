@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.auth import get_password_hash
 
-def get_user(db: Session, user_id: int):
+def get_user(db: Session, user_id: int) -> Optional[models.User]:
     """
         Получает пользователя по его уникальному ID.
 
@@ -23,7 +23,7 @@ def get_user(db: Session, user_id: int):
         """
     return db.query(models.User).filter(models.User.id == user_id).first()
 
-def get_user_by_email(db: Session, email: str):
+def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
     """
         Получает пользователя по его адресу электронной почты.
 
@@ -36,7 +36,7 @@ def get_user_by_email(db: Session, email: str):
         """
     return db.query(models.User).filter(models.User.email == email).first()
 
-def get_user_by_username(db: Session, username: str):
+def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
     """
         Получает пользователя по его имени пользователя.
 
@@ -49,7 +49,7 @@ def get_user_by_username(db: Session, username: str):
         """
     return db.query(models.User).filter(models.User.username == username).first()
 
-def get_all_users(db: Session, skip: int =0, limit: int = 100):
+def get_all_users(db: Session, skip: int =0, limit: int = 100) -> List[models.User]:
     """
         Получает список всех пользователей с возможностью пагинации.
 
@@ -110,7 +110,7 @@ def update_user(db: Session, db_user: models.User, user: schemas.UserCreate) -> 
     return db_user
 
 
-def delete_user(db: Session, user_id: int):
+def delete_user(db: Session, user_id: int) -> bool:
     """
         Удаляет пользователя по его ID.
 
@@ -142,7 +142,7 @@ def get_tasks(db: Session,owner_id: int, skip: int = 0, limit: int = 100) -> lis
         """
     return db.query(models.Task).filter(models.Task.owner_id == owner_id).offset(skip).limit(limit).all()
 
-def get_task(db: Session, task_id: int):
+def get_task(db: Session, task_id: int) -> Optional[models.Task]:
     """
         Получает задачу по ее уникальному ID.
 
@@ -155,7 +155,7 @@ def get_task(db: Session, task_id: int):
         """
     return db.query(models.Task).filter(models.Task.id == task_id).first()
 
-def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
+def create_task(db: Session, task: schemas.TaskCreate, user_id: int) -> models.Task:
     """
         Создает новую задачу в базе данных, привязывая ее к владельцу.
 
@@ -195,7 +195,7 @@ def update_task(db: Session, db_task: models.Task, task_data: schemas.TaskUpdate
     db.refresh(db_task)
     return db_task
 
-def delete_task(db: Session, task_id: int):
+def delete_task(db: Session, task_id: int) -> bool:
     """
         Удаляет задачу по ее ID.
 

@@ -7,6 +7,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from typing import Dict
 
 from app import models, crud, schemas, auth
 from app.auth import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -21,7 +22,7 @@ app.include_router(users.router)
 app.include_router(tasks.router)
 
 @app.post("/token", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> Dict[str, str]:
     """
         Аутентифицирует пользователя и выдает JWT токен доступа.
         Args:

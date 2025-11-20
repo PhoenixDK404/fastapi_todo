@@ -1,11 +1,12 @@
 """Модуль тестирования конечных точек API для управления пользователями."""
 
 import pytest
+from typing import Callable, Dict, Tuple
 from starlette.testclient import TestClient
 from sqlalchemy.orm import Session
-from app import crud, schemas
+from app import crud, schemas, models
 
-def test_create_user_success(client: TestClient, user_data_generator, db_session: Session):
+def test_create_user_success(client: TestClient, user_data_generator: Callable[[], Dict[str, str]], db_session: Session):
     """Тестирует успешное создание нового пользователя."""
     data = user_data_generator()
 
@@ -19,7 +20,7 @@ def test_create_user_success(client: TestClient, user_data_generator, db_session
     assert "hashed_password" not in response.json()
 
 
-def test_create_user_duplicate_email_fail(client: TestClient, user_data_generator, db_session: Session):
+def test_create_user_duplicate_email_fail(client: TestClient, user_data_generator: Callable[[], Dict[str, str]], db_session: Session):
     """Тестирует, что создание пользователя завершается ошибкой при дублировании email."""
     data_original = user_data_generator()
     crud.create_user(db_session, schemas.UserCreate(**data_original))
@@ -34,7 +35,7 @@ def test_create_user_duplicate_email_fail(client: TestClient, user_data_generato
     assert "Email already registered" in response.json()["detail"]
 
 
-def test_create_user_duplicate_username_fail(client: TestClient, user_data_generator, db_session: Session):
+def test_create_user_duplicate_username_fail(client: TestClient, user_data_generator: Callable[[], Dict[str, str]], db_session: Session):
     """Тестирует, что создание пользователя завершается ошибкой при дублировании username."""
     data_original = user_data_generator()
     crud.create_user(db_session, schemas.UserCreate(**data_original))
@@ -50,7 +51,7 @@ def test_create_user_duplicate_username_fail(client: TestClient, user_data_gener
 
 
 
-def test_read_all_users_success(client: TestClient, db_session: Session, user_data_generator):
+def test_read_all_users_success(client: TestClient, db_session: Session, user_data_generator: Callable[[], Dict[str, str]]):
     """Тестирует успешное получение списка всех пользователей."""
     user_data_1 = user_data_generator()
     user_data_2 = user_data_generator()
@@ -66,7 +67,7 @@ def test_read_all_users_success(client: TestClient, db_session: Session, user_da
     assert len(users_list) >= 2
 
 
-def test_read_user_by_id_success(client: TestClient, db_session: Session, user_data_generator):
+def test_read_user_by_id_success(client: TestClient, db_session: Session, user_data_generator: Callable[[], Dict[str, str]]):
     """Тестирует успешное получение пользователя по его ID."""
     data = user_data_generator()
     created_user = crud.create_user(db_session, schemas.UserCreate(**data))
@@ -87,7 +88,7 @@ def test_read_user_not_found(client: TestClient):
     assert "User not found" in response.json()["detail"]
 
 
-def test_update_user_info_success(client: TestClient, db_session: Session, authenticated_user_and_token):
+def test_update_user_info_success(client: TestClient, db_session: Session, authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
     """Тестирует успешное обновление данных своего аккаунта аутентифицированным пользователем."""
     created_user, headers, _ = authenticated_user_and_token
 
@@ -106,8 +107,8 @@ def test_update_user_info_success(client: TestClient, db_session: Session, authe
 
 
 
-def test_update_user_info_forbidden(client: TestClient, db_session: Session, user_data_generator,
-                                    authenticated_user_and_token):
+def test_update_user_info_forbidden(client: TestClient, db_session: Session, user_data_generator: Callable[[], Dict[str, str]],
+                                    authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
     """Тестирует, что аутентифицированный пользователь не может обновлять чужой аккаунт."""
     _, headers, _ = authenticated_user_and_token
 
@@ -123,7 +124,7 @@ def test_update_user_info_forbidden(client: TestClient, db_session: Session, use
     assert "Not authorized to perform this action on this user" in response.json()["detail"]
 
 
-def test_update_user_info_unauthorized(client: TestClient, db_session: Session, user_data_generator):
+def test_update_user_info_unauthorized(client: TestClient, db_session: Session, user_data_generator: Callable[[], Dict[str, str]]):
     """Тестирует, что неаутентифицированный пользователь не может обновлять аккаунт."""
     data = user_data_generator()
     user = crud.create_user(db_session, schemas.UserCreate(**data))
@@ -136,7 +137,7 @@ def test_update_user_info_unauthorized(client: TestClient, db_session: Session, 
     assert response.status_code == 401
 
 
-def test_delete_user_self_success(client: TestClient, db_session: Session, authenticated_user_and_token):
+def test_delete_user_self_success(client: TestClient, db_session: Session, authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
     """Тестирует успешное удаление пользователем своего аккаунта."""
     created_user, headers, _ = authenticated_user_and_token
     user_id = created_user.id
@@ -147,8 +148,8 @@ def test_delete_user_self_success(client: TestClient, db_session: Session, authe
     assert crud.get_user(db_session, user_id=user_id) is None
 
 
-def test_delete_user_other_fail(client: TestClient, db_session: Session, user_data_generator,
-                                authenticated_user_and_token):
+def test_delete_user_other_fail(client: TestClient, db_session: Session, user_data_generator: Callable[[], Dict[str, str]],
+                                authenticated_user_and_token: Tuple[models.User, Dict[str, str], Dict[str, str]]):
     """Тестирует, что аутентифицированный пользователь не может удалить чужой аккаунт (403 Forbidden)."""
     _, headers, _ = authenticated_user_and_token
 

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app import crud, schemas, models, services
 from app.database import get_db
 from app.auth import get_current_user
+from typing import List, Optional
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -35,7 +36,7 @@ def get_authorized_user_for_action(
     return target_user
 
 @router.post("/", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)) -> models.User:
     """
         Создает новую учетную запись пользователя.
 
@@ -49,7 +50,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return services.create_user(db=db, user=user)
 
 @router.get("/", response_model=list[schemas.User])
-def read_all_users(skip: int = 0, limit: int = 100, db: Session =Depends(get_db)):
+def read_all_users(skip: int = 0, limit: int = 100, db: Session =Depends(get_db)) -> List[models.User]:
     """
         Получает список всех пользователей.
 
@@ -65,18 +66,18 @@ def read_all_users(skip: int = 0, limit: int = 100, db: Session =Depends(get_db)
     return users
 
 @router.get("/{user_id}", response_model=schemas.User)
-def read_user(user: models.User = Depends(get_user_or_404)):
+def read_user(user: models.User = Depends(get_user_or_404)) -> models.User:
     """Получает пользователя по его ID. """
     return user
 
 @router.put("/{user_id}", response_model=schemas.User)
-def update_user_info(user_data: schemas.UserCreate, user_id: int, target_user: models.User = Depends(get_authorized_user_for_action), db: Session = Depends(get_db)):
+def update_user_info(user_data: schemas.UserCreate, user_id: int, target_user: models.User = Depends(get_authorized_user_for_action), db: Session = Depends(get_db)) -> models.User:
     """Обновляет информацию об учетной записи пользователя."""
     updated_user = crud.update_user(db, target_user, user_data)
     return updated_user
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user_account(user_id: int,target_user: models.User = Depends(get_authorized_user_for_action),db: Session = Depends(get_db)):
+def delete_user_account(user_id: int,target_user: models.User = Depends(get_authorized_user_for_action),db: Session = Depends(get_db)) -> None:
     """Удаляет учетную запись пользователя."""
     crud.delete_user(db, target_user.id)
     return

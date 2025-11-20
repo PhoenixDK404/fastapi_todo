@@ -5,8 +5,9 @@ SQLAlchemy Модели для базы данных.
 для ORM.
 """
 
+from typing import List
 from sqlalchemy import Column, String, Integer, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.types import Enum as SqlEnum
 from app.database import Base
 from app.schemas import TaskStatus
@@ -24,11 +25,11 @@ class User(Base):
             tasks (relationship): Связь с моделью Task, принадлежащие этому пользователю.
         """
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(50), index=True, unique=True)
-    email = Column(String(100), index=True, unique=True)
-    hashed_password = Column(String(128))
-    tasks = relationship("Task", back_populates="owner")
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    username: Mapped[str]= Column(String(50), index=True, unique=True)
+    email: Mapped[str] = Column(String(100), index=True, unique=True)
+    hashed_password: Mapped[str] = Column(String(128))
+    tasks: Mapped[List["Task"]] = relationship("Task", back_populates="owner")
 
 class Task(Base):
     """
@@ -44,9 +45,9 @@ class Task(Base):
             owner (relationship): Связь с моделью User (владелец задачи).
         """
     __tablename__ = "tasks"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(100), index=True)
-    description = Column(String(500), nullable=True)
-    status = Column(SqlEnum(TaskStatus), default=TaskStatus.new)
-    owner_id = Column(Integer, ForeignKey("users.id"))
-    owner = relationship("User", back_populates="tasks")
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = Column(String(100), index=True)
+    description: Mapped[str] = Column(String(500), nullable=True)
+    status: Mapped[TaskStatus] = Column(SqlEnum(TaskStatus), default=TaskStatus.new)
+    owner_id: Mapped[int] = Column(Integer, ForeignKey("users.id"))
+    owner: Mapped["User"] = relationship("User", back_populates="tasks")

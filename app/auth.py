@@ -12,7 +12,7 @@ import os
 
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any, Union
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -36,7 +36,7 @@ except ValueError:
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-def verify_password(plain_password, hashed_password):
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
         Проверяет, соответствует ли открытый пароль хешированному.
 
@@ -49,7 +49,7 @@ def verify_password(plain_password, hashed_password):
         """
     return pwd_context.verify(plain_password, hashed_password)
 
-def get_password_hash(password):
+def get_password_hash(password: str) -> str:
     """
         Создает хеш для заданного открытого пароля.
 
@@ -61,7 +61,7 @@ def get_password_hash(password):
         """
     return pwd_context.hash(password)
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: Dict[str, Union[str, int]], expires_delta: Optional[timedelta] = None) -> str:
     """
         Создает JWT токен доступа.
 
@@ -72,13 +72,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         Returns:
             str: Сгенерированный JWT токен.
         """
-    to_encode = data.copy()
+    to_encode: Dict[str, Any] = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire: datetime = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp":expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, ALGORITHM)
+    to_encode.update({"exp": expire})
+    encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, ALGORITHM)
     return encoded_jwt
 
 async def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> DBUser:
