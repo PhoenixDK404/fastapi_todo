@@ -12,6 +12,7 @@ from sqlalchemy.types import Enum as SqlEnum
 from app.database import Base
 from app.schemas import TaskStatus
 
+
 class User(Base):
     """
         Модель базы данных для пользователя.
@@ -22,14 +23,16 @@ class User(Base):
             username (str): Уникальное имя пользователя.
             email (str): Уникальный адрес электронной почты.
             hashed_password (str): Хеш пароля пользователя.
-            tasks (relationship): Связь с моделью Task, принадлежащие этому пользователю.
+            tasks (relationship): Связь с моделью Task,
+                                  принадлежащие этому пользователю.
         """
     __tablename__ = "users"
     id: Mapped[int] = Column(Integer, primary_key=True, index=True)
-    username: Mapped[str]= Column(String(50), index=True, unique=True)
+    username: Mapped[str] = Column(String(50), index=True, unique=True)
     email: Mapped[str] = Column(String(100), index=True, unique=True)
     hashed_password: Mapped[str] = Column(String(128))
     tasks: Mapped[List["Task"]] = relationship("Task", back_populates="owner")
+
 
 class Task(Base):
     """
@@ -39,7 +42,7 @@ class Task(Base):
             __tablename__ (str): Имя таблицы в БД ("tasks").
             id (int): Первичный ключ, уникальный идентификатор задачи.
             title (str): Название задачи.
-            description (str, optional): Полное описание задачи (может быть None).
+            description (str): Полное описание задачи.
             status (str): Текущий статус задачи (по умолчанию "new").
             owner_id (int): Внешний ключ, ID пользователя-владельца.
             owner (relationship): Связь с моделью User (владелец задачи).
@@ -48,6 +51,7 @@ class Task(Base):
     id: Mapped[int] = Column(Integer, primary_key=True, index=True)
     title: Mapped[str] = Column(String(100), index=True)
     description: Mapped[str] = Column(String(500), nullable=True)
-    status: Mapped[TaskStatus] = Column(SqlEnum(TaskStatus), default=TaskStatus.new)
+    status: Mapped[TaskStatus] = Column(SqlEnum(TaskStatus),
+                                        default=TaskStatus.new)
     owner_id: Mapped[int] = Column(Integer, ForeignKey("users.id"))
     owner: Mapped["User"] = relationship("User", back_populates="tasks")

@@ -10,10 +10,12 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from enum import Enum
 
+
 class TaskStatus(str, Enum):
     new = "new"
     in_processing = "in processing"
     finished = "finished"
+
 
 class TaskBase(BaseModel):
     """Базовая схема для задачи, содержащая поля для создания и обновления."""
@@ -21,9 +23,11 @@ class TaskBase(BaseModel):
     description: Optional[str] = None
     status: TaskStatus = TaskStatus.new
 
+
 class TaskCreate(TaskBase):
     """Схема для создания новой задачи (наследует TaskBase)."""
     pass
+
 
 class TaskUpdate(TaskBase):
     """Схема для частичного обновления существующей задачи"""
@@ -31,34 +35,42 @@ class TaskUpdate(TaskBase):
     description: Optional[str] = None
     status: Optional[TaskStatus] = None
 
+
 class Task(TaskBase):
     """Схема для чтения задачи"""
     id: int
     owner_id: int
+
     class Config:
         """Позволяет Pydantic работать с ORM-объектами SQLAlchemy."""
         from_attributes = True
+
 
 class UserBase(BaseModel):
     """Базовая схема для создания или чтения пользователя"""
     username: str
     email: EmailStr
 
+
 class UserCreate(UserBase):
     """Схема для создания нового пользователя"""
     password: str
 
+
 class User(UserBase):
     """Схема для чтения пользователя"""
     id: int
-    tasks: List[Task] =[]
+    tasks: List[Task] = []
+
     class Config:
         from_attributes = True
+
 
 class Token(BaseModel):
     """Схема для ответа с токеном доступа после успешной аутентификации."""
     access_token: str
     token_type: str
+
 
 class TokenData(BaseModel):
     """Схема для данных, закодированных в JWT токене"""

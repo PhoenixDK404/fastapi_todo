@@ -1,0 +1,22 @@
+[project]
+name = "fastapi-todo"
+version = "0.1.0"
+description = "API сервис для управления пользователями и задачами"
+authors = [
+{name = "Karimov Damir"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = "^3.12"
+dependencies = [
+]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.111.0"
+uvicorn = "^0.29.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

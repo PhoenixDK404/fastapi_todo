@@ -66,10 +66,10 @@ def db_session(db_engine) -> Generator[Engine, None, None]:
     app.dependency_overrides = {}
 
 
-
 @pytest.fixture(scope="session")
 def client() -> Generator[TestClient, None, None]:
-    """Предоставляет тестовый клиент для взаимодействия с FastAPI приложением."""
+    """Предоставляет тестовый клиент
+    для взаимодействия с FastAPI приложением."""
     with TestClient(app, base_url="http://test") as c:
         yield c
 
@@ -83,7 +83,8 @@ def get_auth_token_fixture(client: TestClient) -> Callable[[str, str], str]:
         client (TestClient): Фикстура тестового клиента.
 
     Returns:
-        function: Функция, принимающая username и password и возвращающая токен.
+        function: Функция, принимающая username
+                  и password и возвращающая токен.
     """
 
     def _get_auth_token(username, password) -> str:
@@ -93,20 +94,27 @@ def get_auth_token_fixture(client: TestClient) -> Callable[[str, str], str]:
             data={"username": username, "password": password}
         )
 
-        assert response.status_code == 200, f"Failed to get token: {response.json()}"
+        assert response.status_code == 200, \
+            f"Failed to get token: {response.json()}"
         return response.json()["access_token"]
 
     return _get_auth_token
 
 
 @pytest.fixture(scope="function")
-def authenticated_user_and_token(db_session: Session, user_data_generator: Callable[[], Dict[str, str]], get_auth_token_fixture: Callable[[str, str], str]) -> Tuple[models.User, Dict[str, str], Dict[str, str]]:
+def authenticated_user_and_token(db_session: Session,
+                                 user_data_generator:
+                                 Callable[[], Dict[str, str]],
+                                 get_auth_token_fixture:
+                                 Callable[[str, str], str]) \
+        -> Tuple[models.User, Dict[str, str], Dict[str, str]]:
     """
     Создает нового пользователя в БД и немедленно аутентифицирует его.
 
     Args:
         db_session (Session): Фикстура сессии БД.
-        user_data_generator (function): Фабрика для генерации данных пользователя.
+        user_data_generator (function): Фабрика для генерации
+        данных пользователя.
         get_auth_token_fixture (function): Фабрика для получения токена.
 
     Returns:
@@ -123,9 +131,11 @@ def authenticated_user_and_token(db_session: Session, user_data_generator: Calla
     db_session.commit()
     db_session.refresh(user)
 
-    token = get_auth_token_fixture(user_data["username"], user_data["password"])
+    token = get_auth_token_fixture(user_data["username"],
+                                   user_data["password"])
 
     return user, {"Authorization": f"Bearer {token}"}, user_data
+
 
 @pytest.fixture(scope="session")
 def task_data_generator() -> Callable[[], Dict[str, str]]:
@@ -136,33 +146,46 @@ def task_data_generator() -> Callable[[], Dict[str, str]]:
         nonlocal counter
         counter += 1
         return {
-            "title" : f"Test Task Title {counter}",
-            "description" : f"Details for task {counter}",
-            "status" : schemas.TaskStatus.new.value
+            "title": f"Test Task Title {counter}",
+            "description": f"Details for task {counter}",
+            "status": schemas.TaskStatus.new.value
         }
 
     return _generator
 
+
 @pytest.fixture(scope="function")
-def task_factory(db_session: Session, task_data_generator: Callable[[], Dict[str, Any]]) -> Callable[[int, Optional[Dict[str, Any]]], models.Task]:
+def task_factory(db_session: Session,
+                 task_data_generator: Callable[[], Dict[str, Any]]) \
+        -> Callable[[int, Optional[Dict[str, Any]]], models.Task]:
     """Фикстура для создания и сохранения объекта Task в БД."""
-    def _create_task(owner_id: int, initial_data: Dict[str, Any] = None) -> models.Task:
+    def _create_task(owner_id: int,
+                     initial_data: Dict[str, Any] = None) -> models.Task:
         data = task_data_generator()
         if initial_data:
             data.update(initial_data)
         task_schema = schemas.TaskCreate(**data)
-        return crud.create_task(db=db_session, task=task_schema, user_id=owner_id) # type: ignore
+        return crud.create_task(db=db_session,
+                                task=task_schema,
+                                user_id=owner_id)  # type: ignore
 
     return _create_task
 
+
 @pytest.fixture(scope="function")
-def another_user_and_token(db_session: Session, user_data_generator: Callable[[], Dict[str, str]], get_auth_token_fixture: Callable[[str, str], str]) -> Tuple[models.User, Dict[str, str], Dict[str, str]]:
+def another_user_and_token(db_session: Session,
+                           user_data_generator:
+                           Callable[[], Dict[str, str]],
+                           get_auth_token_fixture:
+                           Callable[[str, str], str]) \
+        -> Tuple[models.User, Dict[str, str], Dict[str, str]]:
     """
     Создает второго, независимого пользователя.
 
     Args:
         db_session (Session): Фикстура сессии БД.
-        user_data_generator (function): Фабрика для генерации данных пользователя.
+        user_data_generator (function): Фабрика для генерации
+        данных пользователя.
         get_auth_token_fixture (function): Фабрика для получения токена.
 
     Returns:
@@ -179,6 +202,7 @@ def another_user_and_token(db_session: Session, user_data_generator: Callable[[]
     db_session.commit()
     db_session.refresh(user)
 
-    token = get_auth_token_fixture(user_data["username"], user_data["password"])
+    token = get_auth_token_fixture(user_data["username"],
+                                   user_data["password"])
 
     return user, {"Authorization": f"Bearer {token}"}, user_data

@@ -29,12 +29,14 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 try:
-    ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+    ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES",
+                                                30))
 except ValueError:
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
@@ -49,6 +51,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         """
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password: str) -> str:
     """
         Создает хеш для заданного открытого пароля.
@@ -61,12 +64,14 @@ def get_password_hash(password: str) -> str:
         """
     return pwd_context.hash(password)
 
-def create_access_token(data: Dict[str, Union[str, int]], expires_delta: Optional[timedelta] = None) -> str:
+
+def create_access_token(data: Dict[str, Union[str, int]],
+                        expires_delta: Optional[timedelta] = None) -> str:
     """
         Создает JWT токен доступа.
 
         Args:
-            data (dict): Данные, которые будут закодированы в JWT (например, 'sub' - subject/username).
+            data (dict): Данные, которые будут закодированы в JWT.
             expires_delta (Optional[timedelta]): Срок действия токена.
 
         Returns:
@@ -76,18 +81,25 @@ def create_access_token(data: Dict[str, Union[str, int]], expires_delta: Optiona
     if expires_delta:
         expire: datetime = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = (
+                datetime.utcnow()
+                + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
     to_encode.update({"exp": expire})
     encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> DBUser:
+
+async def get_current_user(db: Session = Depends(get_db),
+                           token: str = Depends(oauth2_scheme)) -> DBUser:
     """
-        Извлекает и валидирует JWT токен, возвращая объект текущего пользователя.
+        Извлекает и валидирует JWT токен,
+        возвращая объект текущего пользователя.
 
         Args:
             db (Session, optional): Сессия базы данных.
-            token (str, optional): JWT токен, извлеченный из заголовка Authorization.
+            token (str, optional): JWT токен,
+            извлеченный из заголовка Authorization.
 
         Returns:
             DBUser: Объект аутентифицированного пользователя из БД.

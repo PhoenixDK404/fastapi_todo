@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.auth import get_password_hash
 
+
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
     """
         Получает пользователя по его уникальному ID.
@@ -22,6 +23,7 @@ def get_user(db: Session, user_id: int) -> Optional[models.User]:
             Optional[models.User]: Объект пользователя или None, если не найден.
         """
     return db.query(models.User).filter(models.User.id == user_id).first()
+
 
 def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
     """
@@ -36,6 +38,7 @@ def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
         """
     return db.query(models.User).filter(models.User.email == email).first()
 
+
 def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
     """
         Получает пользователя по его имени пользователя.
@@ -49,7 +52,10 @@ def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
         """
     return db.query(models.User).filter(models.User.username == username).first()
 
-def get_all_users(db: Session, skip: int =0, limit: int = 100) -> List[models.User]:
+
+def get_all_users(db: Session,
+                  skip: int =0,
+                  limit: int = 100) -> List[models.User]:
     """
         Получает список всех пользователей с возможностью пагинации.
 
@@ -62,6 +68,7 @@ def get_all_users(db: Session, skip: int =0, limit: int = 100) -> List[models.Us
             List[models.User]: Список объектов пользователей.
         """
     return db.query(models.User).offset(skip).limit(limit).all()
+
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     """
@@ -84,7 +91,10 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db.commit()
     db.refresh(db_user)
     return db_user
-def update_user(db: Session, db_user: models.User, user: schemas.UserCreate) -> models.User:
+
+
+def update_user(db: Session, db_user: models.User,
+                user: schemas.UserCreate) -> models.User:
     """
         Обновляет данные существующего пользователя.
 
@@ -128,7 +138,10 @@ def delete_user(db: Session, user_id: int) -> bool:
         return True
     return False
 
-def get_tasks(db: Session,owner_id: int, skip: int = 0, limit: int = 100) -> list[models.Task]:
+
+def get_tasks(db: Session,owner_id: int,
+              skip: int = 0,
+              limit: int = 100) -> list[models.Task]:
     """
         Получает список всех задач с возможностью пагинации.
 
@@ -141,6 +154,7 @@ def get_tasks(db: Session,owner_id: int, skip: int = 0, limit: int = 100) -> lis
             List[models.Task]: Список объектов задач.
         """
     return db.query(models.Task).filter(models.Task.owner_id == owner_id).offset(skip).limit(limit).all()
+
 
 def get_task(db: Session, task_id: int) -> Optional[models.Task]:
     """
@@ -155,7 +169,9 @@ def get_task(db: Session, task_id: int) -> Optional[models.Task]:
         """
     return db.query(models.Task).filter(models.Task.id == task_id).first()
 
-def create_task(db: Session, task: schemas.TaskCreate, user_id: int) -> models.Task:
+
+def create_task(db: Session,
+                task: schemas.TaskCreate, user_id: int) -> models.Task:
     """
         Создает новую задачу в базе данных, привязывая ее к владельцу.
 
@@ -174,7 +190,8 @@ def create_task(db: Session, task: schemas.TaskCreate, user_id: int) -> models.T
     return db_task
 
 
-def update_task(db: Session, db_task: models.Task, task_data: schemas.TaskUpdate) -> models.Task:
+def update_task(db: Session, db_task: models.Task,
+                task_data: schemas.TaskUpdate) -> models.Task:
     """
     Обновляет данные существующей задачи, проверяя принадлежность владельцу.
 
@@ -194,6 +211,7 @@ def update_task(db: Session, db_task: models.Task, task_data: schemas.TaskUpdate
     db.commit()
     db.refresh(db_task)
     return db_task
+
 
 def delete_task(db: Session, task_id: int) -> bool:
     """
