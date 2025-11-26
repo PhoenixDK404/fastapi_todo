@@ -56,15 +56,21 @@ cd fastapi_todo
 
 ## 2️⃣ Создание файла .env
 
-Создай файл .env в корне проекта и укажите свои данные:
+Перед запуском приложения создайте файл `.env` на основе `.env.example`:
 
+```cmd
+copy .env.example .env
 ```
-DATABASE_URL="sqlite:///./your_database_name.db"
 
-SECRET_KEY="YOUR_OWN_LONG_RANDOM_SECRET_KEY"
-ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
+После создания .env установите свои значения:
+
+DATABASE_URL — путь к базе данных.
+
+SECRET_KEY — ваш секретный ключ для JWT.
+
+ALGORITHM — алгоритм для JWT (HS256 по умолчанию).
+
+ACCESS_TOKEN_EXPIRE_MINUTES — время жизни токена в минутах.
 
 ## 3️⃣ Установка зависимостей
 Через Poetry:
