@@ -1,5 +1,4 @@
-"""
-Маршруты API для управления пользователями.
+"""Маршруты API для управления пользователями.
 
 Определяет конечные точки для создания, чтения,
 обновления и удаления учетных записей пользователей.
@@ -16,9 +15,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 def get_user_or_404(user_id: int,
                     db: Session = Depends(get_db)) -> models.User:
-    """
-    Получает пользователя по ID или вызывает ошибку 404.
-    """
+    """Получает пользователя по ID или вызывает ошибку 404."""
     db_user = crud.get_user(db, user_id=user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -29,10 +26,7 @@ def get_authorized_user_for_action(
     target_user: models.User = Depends(get_user_or_404),
     current_user: models.User = Depends(get_current_user)
 ) -> models.User:
-    """
-    Проверяет, что текущий пользователь
-    является владельцем профиля target_user.
-    """
+    """Проверяет, что текущий пользователь является владельцем профиля."""
     if current_user.id != target_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -45,40 +39,38 @@ def get_authorized_user_for_action(
              status_code=status.HTTP_201_CREATED)
 def create_user(user: schemas.UserCreate,
                 db: Session = Depends(get_db)) -> models.User:
+    """Создает новую учетную запись пользователя.
+
+    Args:
+        user (schemas.UserCreate): Данные для создания пользователя.
+        db (Session): Сессия базы данных.
+
+    Returns:
+        schemas.User: Созданный объект пользователя.
     """
-        Создает новую учетную запись пользователя.
-
-        Args:
-            user (schemas.UserCreate): Данные для создания пользователя.
-            db (Session): Сессия базы данных.
-
-        Returns:
-            schemas.User: Созданный объект пользователя.
-        """
     return services.create_user(db=db, user=user)
 
 
 @router.get("/", response_model=list[schemas.User])
 def read_all_users(skip: int = 0, limit: int = 100,
                    db: Session = Depends(get_db)) -> List[models.User]:
+    """Получает список всех пользователей.
+
+    Args:
+        skip (int): Количество пропускаемых записей.
+        limit (int): Максимальное количество возвращаемых записей.
+        db (Session): Сессия базы данных.
+
+    Returns:
+        list[schemas.User]: Список объектов пользователей.
     """
-        Получает список всех пользователей.
-
-        Args:
-            skip (int): Количество пропускаемых записей.
-            limit (int): Максимальное количество возвращаемых записей.
-            db (Session): Сессия базы данных.
-
-        Returns:
-            list[schemas.User]: Список объектов пользователей.
-        """
     users = crud.get_all_users(db, skip=skip, limit=limit)
     return users
 
 
 @router.get("/{user_id}", response_model=schemas.User)
 def read_user(user: models.User = Depends(get_user_or_404)) -> models.User:
-    """Получает пользователя по его ID. """
+    """Получает пользователя по его ID."""
     return user
 
 

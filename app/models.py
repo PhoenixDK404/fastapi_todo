@@ -1,5 +1,4 @@
-"""
-SQLAlchemy Модели для базы данных.
+"""SQLAlchemy Модели для базы данных.
 
 Определяет структуру таблиц 'users' и 'tasks', их поля, ключи и взаимосвязи
 для ORM.
@@ -14,18 +13,17 @@ from app.schemas import TaskStatus
 
 
 class User(Base):
-    """
-        Модель базы данных для пользователя.
+    """Модель базы данных для пользователя.
 
-        Attributes:
-            __tablename__ (str): Имя таблицы в БД ("users").
-            id (int): Первичный ключ, уникальный идентификатор пользователя.
-            username (str): Уникальное имя пользователя.
-            email (str): Уникальный адрес электронной почты.
-            hashed_password (str): Хеш пароля пользователя.
-            tasks (relationship): Связь с моделью Task,
-                                  принадлежащие этому пользователю.
-        """
+    Attributes:
+        __tablename__ (str): Имя таблицы в БД ("users").
+        id (int): Первичный ключ, уникальный идентификатор пользователя.
+        username (str): Уникальное имя пользователя.
+        email (str): Уникальный адрес электронной почты.
+        hashed_password (str): Хеш пароля пользователя.
+        tasks (relationship): Связь с Task, принадлежащие этому пользователю.
+    """
+
     __tablename__ = "users"
     id: Mapped[int] = Column(Integer, primary_key=True, index=True)
     username: Mapped[str] = Column(String(50), index=True, unique=True)
@@ -35,18 +33,18 @@ class User(Base):
 
 
 class Task(Base):
-    """
-        Модель базы данных для задач.
+    """Модель базы данных для задач.
 
-        Attributes:
-            __tablename__ (str): Имя таблицы в БД ("tasks").
-            id (int): Первичный ключ, уникальный идентификатор задачи.
-            title (str): Название задачи.
-            description (str): Полное описание задачи.
-            status (str): Текущий статус задачи (по умолчанию "new").
-            owner_id (int): Внешний ключ, ID пользователя-владельца.
-            owner (relationship): Связь с моделью User (владелец задачи).
-        """
+    Attributes:
+        __tablename__ (str): Имя таблицы в БД ("tasks").
+        id (int): Первичный ключ, уникальный идентификатор задачи.
+        title (str): Название задачи.
+        description (str): Полное описание задачи.
+        status (str): Текущий статус задачи (по умолчанию "new").
+        owner_id (int): Внешний ключ, ID пользователя-владельца.
+        owner (relationship): Связь с моделью User (владелец задачи).
+    """
+
     __tablename__ = "tasks"
     id: Mapped[int] = Column(Integer, primary_key=True, index=True)
     title: Mapped[str] = Column(String(100), index=True)

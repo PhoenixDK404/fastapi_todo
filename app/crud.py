@@ -1,5 +1,4 @@
-"""
-CRUD операции для взаимодействия с базой данных.
+"""CRUD операции для взаимодействия с базой данных.
 
 Содержит функции, которые работают с объектами SQLAlchemy Session,
 User, и Task, обеспечивая логику доступа и модификации данных.
@@ -12,75 +11,70 @@ from app.auth import get_password_hash
 
 
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
+    """Получает пользователя по его уникальному ID.
+
+    Args:
+        db (Session): Сессия базы данных SQLAlchemy.
+        user_id (int): ID пользователя для поиска.
+
+    Returns:
+        Optional[models.User]: Объект пользователя или None, если не найден.
     """
-        Получает пользователя по его уникальному ID.
-
-        Args:
-            db (Session): Сессия базы данных SQLAlchemy.
-            user_id (int): ID пользователя для поиска.
-
-        Returns:
-            Optional[models.User]: Объект пользователя или None, если не найден.
-        """
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
 def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
+    """Получает пользователя по его адресу электронной почты.
+
+    Args:
+        db (Session): Сессия базы данных SQLAlchemy.
+        email (str): Адрес электронной почты для поиска.
+
+    Returns:
+        Optional[models.User]: Объект пользователя или None, если не найден.
     """
-        Получает пользователя по его адресу электронной почты.
-
-        Args:
-            db (Session): Сессия базы данных SQLAlchemy.
-            email (str): Адрес электронной почты для поиска.
-
-        Returns:
-            Optional[models.User]: Объект пользователя или None, если не найден.
-        """
     return db.query(models.User).filter(models.User.email == email).first()
 
 
 def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
+    """Получает пользователя по его имени пользователя.
+
+    Args:
+        db (Session): Сессия базы данных SQLAlchemy.
+        username (str): Имя пользователя для поиска.
+
+    Returns:
+        Optional[models.User]: Объект пользователя или None, если не найден.
     """
-        Получает пользователя по его имени пользователя.
-
-        Args:
-            db (Session): Сессия базы данных SQLAlchemy.
-            username (str): Имя пользователя для поиска.
-
-        Returns:
-            Optional[models.User]: Объект пользователя или None, если не найден.
-        """
     return db.query(models.User).filter(models.User.username == username).first()
 
 
 def get_all_users(db: Session,
                   skip: int =0,
                   limit: int = 100) -> List[models.User]:
+    """Получает список всех пользователей с возможностью пагинации.
+
+    Args:
+        db (Session): Сессия базы данных SQLAlchemy.
+        skip (int): Количество пропускаемых записей.
+        limit (int): Максимальное количество возвращаемых записей.
+
+    Returns:
+        list[models.User]: Список объектов пользователей.
     """
-        Получает список всех пользователей с возможностью пагинации.
-
-        Args:
-            db (Session): Сессия базы данных SQLAlchemy.
-            skip (int): Количество пропускаемых записей.
-            limit (int): Максимальное количество возвращаемых записей.
-
-        Returns:
-            List[models.User]: Список объектов пользователей.
-        """
     return db.query(models.User).offset(skip).limit(limit).all()
 
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
+    """Создает нового пользователя в базе данных.
+
+    Args:
+        db (Session): Сессия базы данных SQLAlchemy.
+        user (schemas.UserCreate): Схема Pydantic с данными пользователя.
+
+    Returns:
+        models.User: Объект созданного пользователя.
     """
-        Создает нового пользователя в базе данных.
-
-        Args:
-            db (Session): Сессия базы данных SQLAlchemy.
-            user (schemas.UserCreate): Схема Pydantic с данными пользователя.
-
-        Returns:
-            models.User: Объект созданного пользователя.
-        """
     hashed_password = get_password_hash(user.password)
     db_user = models.User(
         username=user.username,
@@ -95,17 +89,16 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
 
 def update_user(db: Session, db_user: models.User,
                 user: schemas.UserCreate) -> models.User:
+    """Обновляет данные существующего пользователя.
+
+    Args:
+        db (Session): Сессия базы данных SQLAlchemy.
+        user_id (int): ID пользователя, которого нужно обновить.
+        user_data (schemas.UserCreate): Схема Pydantic с новыми данными.
+
+    Returns:
+        Optional[models.User]: Обновленный объект пользователя или None, если не найден.
     """
-        Обновляет данные существующего пользователя.
-
-        Args:
-            db (Session): Сессия базы данных SQLAlchemy.
-            user_id (int): ID пользователя, которого нужно обновить.
-            user_data (schemas.UserCreate): Схема Pydantic с новыми данными.
-
-        Returns:
-            Optional[models.User]: Обновленный объект пользователя или None, если не найден.
-        """
     update_data = user.model_dump(exclude_unset=True)
 
     if 'password' in update_data:
@@ -121,16 +114,15 @@ def update_user(db: Session, db_user: models.User,
 
 
 def delete_user(db: Session, user_id: int) -> bool:
+    """Удаляет пользователя по его ID.
+
+    Args:
+        db (Session): Сессия базы данных SQLAlchemy.
+        user_id (int): ID пользователя для удаления.
+
+    Returns:
+        bool: True, если пользователь удален, False, если не найден.
     """
-        Удаляет пользователя по его ID.
-
-        Args:
-            db (Session): Сессия базы данных SQLAlchemy.
-            user_id (int): ID пользователя для удаления.
-
-        Returns:
-            bool: True, если пользователь удален, False, если не найден.
-        """
     db_user = get_user(db, user_id)
     if db_user:
         db.delete(db_user)
@@ -142,8 +134,7 @@ def delete_user(db: Session, user_id: int) -> bool:
 def get_tasks(db: Session,owner_id: int,
               skip: int = 0,
               limit: int = 100) -> list[models.Task]:
-    """
-        Получает список всех задач с возможностью пагинации.
+    """Получает список всех задач с возможностью пагинации.
 
         Args:
             db (Session): Сессия базы данных SQLAlchemy.

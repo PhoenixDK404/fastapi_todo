@@ -1,5 +1,4 @@
-"""
-Основной файл приложения FastAPI.
+"""Основной файл приложения FastAPI.
 
 Инициализирует FastAPI приложение, создает все таблицы в базе данных
 при запуске и подключает рауты для пользователей и задач.
@@ -25,15 +24,16 @@ app.include_router(tasks.router)
 @app.post("/token", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
                            db: Session = Depends(get_db)) -> Dict[str, str]:
+    """Аутентифицирует пользователя и выдает JWT токен доступа.
+
+    Args:
+        form_data (OAuth2PasswordRequestForm): Данные формы с username
+                                               и password.
+        db (Session, optional): Сессия базы данных.
+
+    Returns:
+        dict: Объект с 'access_token' и 'token_type'.
     """
-        Аутентифицирует пользователя и выдает JWT токен доступа.
-        Args:
-            form_data (OAuth2PasswordRequestForm): Данные формы с username
-            и password.
-            db (Session, optional): Сессия базы данных.
-        Returns:
-            dict: Объект с 'access_token' и 'token_type'.
-        """
     user = crud.get_user_by_username(db, username=form_data.username)
     if not user or not auth.verify_password(form_data.password,
                                             user.hashed_password):

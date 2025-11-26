@@ -1,5 +1,4 @@
-"""
-Логика аутентификации и авторизации, основанная на JWT (JSON Web Tokens).
+"""Логика аутентификации и авторизации, основанная на JWT (JSON Web Tokens).
 
 Содержит утилиты для:
 1. Хеширования и проверки паролей.
@@ -39,44 +38,41 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Проверяет, соответствует ли открытый пароль хешированному.
+
+    Args:
+        plain_password (str): Пароль, введенный пользователем.
+        hashed_password (str): Хешированный пароль из базы данных.
+
+    Returns:
+        bool: True, если пароли совпадают.
     """
-        Проверяет, соответствует ли открытый пароль хешированному.
-
-        Args:
-            plain_password (str): Пароль, введенный пользователем.
-            hashed_password (str): Хешированный пароль из базы данных.
-
-        Returns:
-            bool: True, если пароли совпадают.
-        """
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
+    """Создает хеш для заданного открытого пароля.
+
+    Args:
+        password (str): Открытый пароль.
+
+    Returns:
+        str: Хешированный пароль.
     """
-        Создает хеш для заданного открытого пароля.
-
-        Args:
-            password (str): Открытый пароль.
-
-        Returns:
-            str: Хешированный пароль.
-        """
     return pwd_context.hash(password)
 
 
 def create_access_token(data: Dict[str, Union[str, int]],
                         expires_delta: Optional[timedelta] = None) -> str:
+    """Создает JWT токен доступа.
+
+    Args:
+        data (dict): Данные, которые будут закодированы в JWT.
+        expires_delta (Optional[timedelta]): Срок действия токена.
+
+    Returns:
+        str: Сгенерированный JWT токен.
     """
-        Создает JWT токен доступа.
-
-        Args:
-            data (dict): Данные, которые будут закодированы в JWT.
-            expires_delta (Optional[timedelta]): Срок действия токена.
-
-        Returns:
-            str: Сгенерированный JWT токен.
-        """
     to_encode: Dict[str, Any] = data.copy()
     if expires_delta:
         expire: datetime = datetime.utcnow() + expires_delta
@@ -92,18 +88,15 @@ def create_access_token(data: Dict[str, Union[str, int]],
 
 async def get_current_user(db: Session = Depends(get_db),
                            token: str = Depends(oauth2_scheme)) -> DBUser:
+    """Извлекает и валидирует JWTтокен, возвращая объект текущего пользователя.
+
+    Args:
+        db (Session): Сессия базы данных.
+        token (str): JWT токен, извлеченный из заголовка Authorization.
+
+    Returns:
+        DBUser: Объект аутентифицированного пользователя из БД.
     """
-        Извлекает и валидирует JWT токен,
-        возвращая объект текущего пользователя.
-
-        Args:
-            db (Session, optional): Сессия базы данных.
-            token (str, optional): JWT токен,
-            извлеченный из заголовка Authorization.
-
-        Returns:
-            DBUser: Объект аутентифицированного пользователя из БД.
-        """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

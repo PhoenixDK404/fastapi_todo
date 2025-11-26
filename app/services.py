@@ -1,5 +1,4 @@
-"""
-Сервисный слой между роутерами и CRUD.
+"""Сервисный слой между роутерами и CRUD.
 
 Использование этого слоя обеспечивает чистоту роутеров
 и сохраняет CRUD-слой исключительно для операций персистентности.
@@ -13,19 +12,16 @@ from typing import Optional
 
 def get_task_by_id_for_user(db: Session,
                             task_id: int, user_id: int) -> models.Task:
-    """
-    Получает задачу по ID, гарантируя,
-    что она принадлежит указанному пользователю.
+    """Получает задачу по ID, гарантируя, что она принадлежит пользователю.
 
     Args:
         db (Session): Сессия базы данных SQLAlchemy.
         task_id (int): ID задачи для поиска.
         user_id (int): ID текущего пользователя,
-        который должен быть владельцем задачи.
+                       который должен быть владельцем задачи.
 
     Returns:
-        models.Task: Объект задачи,
-        если она найдена и принадлежит пользователю.
+        models.Task: Объект Task, если она найдена и принадлежит пользователю.
     """
     db_task = crud.get_task(db, task_id=task_id)
     if db_task is None:
@@ -39,8 +35,7 @@ def get_task_by_id_for_user(db: Session,
 def create_task_for_user(db: Session,
                          task_data: schemas.TaskCreate,
                          user_id: int) -> models.Task:
-    """
-    Создает задачу в БД, привязывая ее к владельцу.
+    """Создает задачу в БД, привязывая её к владельцу.
 
     Args:
         db (Session): Сессия базы данных SQLAlchemy.
@@ -55,8 +50,7 @@ def create_task_for_user(db: Session,
 
 def update_task_info(db: Session, task_id: int, user_id: int,
                      task_data: schemas.TaskUpdate) -> models.Task:
-    """
-    Обновляет существующую задачу, гарантируя права доступа.
+    """Обновляет существующую задачу, гарантируя права доступа.
 
     Args:
         db (Session): Сессия базы данных SQLAlchemy.
@@ -74,8 +68,7 @@ def update_task_info(db: Session, task_id: int, user_id: int,
 
 
 def delete_task_by_id(db: Session, task_id: int, user_id: int) -> None:
-    """
-    Удаляет задачу, гарантируя права доступа.
+    """Удаляет задачу, гарантируя права доступа.
 
     Args:
         db (Session): Сессия базы данных SQLAlchemy.
@@ -91,13 +84,11 @@ def delete_task_by_id(db: Session, task_id: int, user_id: int) -> None:
 
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
-    """
-    Создает нового пользователя в системе.
+    """Создает нового пользователя в системе.
 
     Args:
         db (Session): Сессия базы данных SQLAlchemy.
-        user (schemas.UserCreate): Схема Pydantic с данными
-                                   нового пользователя.
+        user (schemas.UserCreate): Схема с данными нового пользователя.
 
     Returns:
         models.User: Объект созданного пользователя из БД.
@@ -114,8 +105,7 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
 
 
 def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    """
-    Получает пользователя по адресу электронной почты.
+    """Получает пользователя по адресу электронной почты.
 
     Args:
         db (Session): Сессия базы данных SQLAlchemy.
@@ -128,8 +118,7 @@ def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
 
 
 def get_user_by_id(db: Session, user_id: int) -> Optional[models.User]:
-    """
-    Получает пользователя по его уникальному ID.
+    """Получает пользователя по его уникальному ID.
 
     Args:
         db (Session): Сессия базы данных SQLAlchemy.

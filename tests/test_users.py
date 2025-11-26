@@ -27,8 +27,7 @@ def test_create_user_duplicate_email_fail(
     user_data_generator: Callable[[], Dict[str, str]],
     db_session: Session,
 ):
-    """Тестирует, что создание пользователя завершается ошибкой
-    при дублировании email."""
+    """Тестирует ошибку при дублировании email при создании пользователя."""
     data_original = user_data_generator()
     crud.create_user(db_session, schemas.UserCreate(**data_original))
     db_session.commit()
@@ -46,8 +45,7 @@ def test_create_user_duplicate_username_fail(
         client: TestClient,
         user_data_generator: Callable[[], Dict[str, str]],
         db_session: Session):
-    """Тестирует, что создание пользователя завершается ошибкой
-    при дублировании username."""
+    """Тестирует ошибку при дублировании username при создании пользователя."""
     data_original = user_data_generator()
     crud.create_user(db_session, schemas.UserCreate(**data_original))
     db_session.commit()
@@ -109,9 +107,7 @@ def test_update_user_info_success(
         db_session: Session,
         authenticated_user_and_token:
         Tuple[models.User, Dict[str, str], Dict[str, str]]):
-    """Тестирует успешное обновление данных своего аккаунта
-    аутентифицированным пользователем."""
-
+    """Тестирует успешное обновление данных своего аккаунта пользователем."""
     created_user, headers, _ = authenticated_user_and_token
 
     update_data = {
@@ -135,8 +131,7 @@ def test_update_user_info_forbidden(
         user_data_generator: Callable[[], Dict[str, str]],
         authenticated_user_and_token:
         Tuple[models.User, Dict[str, str], Dict[str, str]]):
-    """Тестирует, что аутентифицированный пользователь не может
-    обновлять чужой аккаунт."""
+    """Тестирует, что пользователь не может обновлять чужой аккаунт."""
     _, headers, _ = authenticated_user_and_token
 
     user_data_2 = user_data_generator()
@@ -159,8 +154,7 @@ def test_update_user_info_unauthorized(
         client: TestClient,
         db_session: Session,
         user_data_generator: Callable[[], Dict[str, str]]):
-    """Тестирует, что неаутентифицированный пользователь не может
-    обновлять аккаунт."""
+    """Проверяет, что неаутенф пользователь не может обновлять аккаунт."""
     data = user_data_generator()
     user = crud.create_user(db_session, schemas.UserCreate(**data))
     db_session.commit()
@@ -194,8 +188,7 @@ def test_delete_user_other_fail(
         user_data_generator: Callable[[], Dict[str, str]],
         authenticated_user_and_token:
         Tuple[models.User, Dict[str, str], Dict[str, str]]):
-    """Тестирует, что аутентифицированный пользователь не может
-    удалить чужой аккаунт."""
+    """Тестирует, что пользователь не может удалить чужой аккаунт."""
     _, headers, _ = authenticated_user_and_token
 
     user_data_2 = user_data_generator()

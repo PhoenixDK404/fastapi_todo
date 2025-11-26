@@ -1,5 +1,4 @@
-"""
-Конфигурация Pytest для тестовой среды приложения.
+"""Конфигурация Pytest для тестовой среды приложения.
 
 Содержит фикстуры для настройки базы данных, клиента FastAPI
 и управления аутентифицированными пользователями и токенами доступа.
@@ -41,8 +40,7 @@ def db_engine() -> Generator[Engine, None, None]:
 
 @pytest.fixture(scope="function")
 def db_session(db_engine) -> Generator[Engine, None, None]:
-    """
-    Создает изолированную сессию базы данных для каждого теста.
+    """Создает изолированную сессию базы данных для каждого теста.
 
     Args:
         db_engine (Engine): Фикстура движка БД.
@@ -68,23 +66,21 @@ def db_session(db_engine) -> Generator[Engine, None, None]:
 
 @pytest.fixture(scope="session")
 def client() -> Generator[TestClient, None, None]:
-    """Предоставляет тестовый клиент
-    для взаимодействия с FastAPI приложением."""
+    """Предоставляет тестовый клиент для взаимодействия с приложением."""
     with TestClient(app, base_url="http://test") as c:
         yield c
 
 
 @pytest.fixture(scope="session")
 def get_auth_token_fixture(client: TestClient) -> Callable[[str, str], str]:
-    """
-    Фабрика для получения JWT токена доступа.
+    """Фабрика для получения JWT токена доступа.
 
     Args:
         client (TestClient): Фикстура тестового клиента.
 
     Returns:
-        function: Функция, принимающая username
-                  и password и возвращающая токен.
+        function: Функция, принимающая username и password
+                  и возвращающая токен.
     """
 
     def _get_auth_token(username, password) -> str:
@@ -108,13 +104,12 @@ def authenticated_user_and_token(db_session: Session,
                                  get_auth_token_fixture:
                                  Callable[[str, str], str]) \
         -> Tuple[models.User, Dict[str, str], Dict[str, str]]:
-    """
-    Создает нового пользователя в БД и немедленно аутентифицирует его.
+    """Создает нового пользователя в БД и немедленно аутентифицирует его.
 
     Args:
         db_session (Session): Фикстура сессии БД.
         user_data_generator (function): Фабрика для генерации
-        данных пользователя.
+                                        данных пользователя.
         get_auth_token_fixture (function): Фабрика для получения токена.
 
     Returns:
@@ -179,13 +174,12 @@ def another_user_and_token(db_session: Session,
                            get_auth_token_fixture:
                            Callable[[str, str], str]) \
         -> Tuple[models.User, Dict[str, str], Dict[str, str]]:
-    """
-    Создает второго, независимого пользователя.
+    """Создает второго, независимого пользователя.
 
     Args:
         db_session (Session): Фикстура сессии БД.
         user_data_generator (function): Фабрика для генерации
-        данных пользователя.
+                                        данных пользователя.
         get_auth_token_fixture (function): Фабрика для получения токена.
 
     Returns:
